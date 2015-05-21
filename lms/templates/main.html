@@ -60,20 +60,14 @@ dir_rtl = 'rtl' if get_language_bidi() else 'ltr'
 
   <script type="text/javascript" src="/jsi18n/"></script>
 
-  <link rel="icon" type="image/x-icon" href="${static.url(microsite.get_value('favicon_path', settings.FAVICON_PATH))}" />
+  <link rel="icon" type="image/x-icon" href="${static.url(settings.FAVICON_PATH)}" />
 
   <%static:css group='style-vendor'/>
   ## route around the overwhelmingly complicated static:css nonsense
   <%
-  if settings.FEATURES.get("USE_CUSTOM_THEME", False):
-    application_css_path = "sass/themes/{theme}/lms-main{rtl}.css".format(
-      theme=getattr(settings, "THEME_NAME", None),
-      rtl="-rtl" if get_language_bidi() else "",
-    )
-  else:
-    application_css_path = "sass/lms-main{rtl}.css".format(
-      rtl="-rtl" if get_language_bidi() else "",
-    )
+  application_css_path = "css/lms-main{rtl}.css".format(
+    rtl="-rtl" if get_language_bidi() else "",
+  )
   %>
   <link rel="stylesheet" href="${static.url(application_css_path)}" type="text/css" media="all" />
 
@@ -102,27 +96,6 @@ dir_rtl = 'rtl' if get_language_bidi() else 'ltr'
 
   <%block name="headextra"/>
 
-<%
-  if theme_enabled() and not is_microsite():
-    header_extra_file = 'theme-head-extra.html'
-    header_file = 'theme-header.html'
-    google_analytics_file = 'theme-google-analytics.html'
-
-    style_overrides_file = None
-
-  else:
-    header_extra_file = None
-
-    if settings.FEATURES['IS_EDX_DOMAIN'] and not is_microsite():
-        header_file = microsite.get_template_path('navigation-edx.html')
-    else:
-        header_file = microsite.get_template_path('navigation.html')
-
-    google_analytics_file = microsite.get_template_path('google_analytics.html')
-
-    style_overrides_file = microsite.get_value('css_overrides_file')
-%>
-
   <%static:optional_include_mako name="header-extra.html" />
 
   <%include file="widgets/optimizely.html" />
@@ -132,10 +105,6 @@ dir_rtl = 'rtl' if get_language_bidi() else 'ltr'
   <meta name="google-site-verification" content="_mipQ4AtZQDNmbtOkwehQDOgCxUUV2fb_C0b6wbiRHY" />
 
   <%include file="google_analytics.html" />
-
-% if style_overrides_file:
-  <link rel="stylesheet" type="text/css" href="${static.url(style_overrides_file)}" />
-% endif
 
 </head>
 
@@ -153,20 +122,7 @@ dir_rtl = 'rtl' if get_language_bidi() else 'ltr'
     </div>
 
     % if not disable_footer:
-        <%block name="footer">
-          ## Can be overridden by child templates wanting to hide the footer.
-          <%
-            if theme_enabled() and not is_microsite():
-              footer_file = 'theme-footer.html'
-            elif settings.FEATURES.get('IS_EDX_DOMAIN', False) and  settings.FEATURES.get('ENABLE_FOOTER_V3', True) and not is_microsite():
-              footer_file = microsite.get_template_path('footer-edx-v3.html')
-            elif settings.FEATURES.get('IS_EDX_DOMAIN', False) and not is_microsite():
-              footer_file = microsite.get_template_path('footer-edx-v2.html')
-            else:
-              footer_file = microsite.get_template_path('footer.html')
-          %>
-          <%include file="${footer_file}" />
-        </%block>
+        <%include file="footer.html" />
     % endif
 
   </div>

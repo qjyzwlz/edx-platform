@@ -77,6 +77,7 @@ lms/static/sass/*.css.map
 cms/static/css/
 cms/static/sass/*.css
 cms/static/sass/*.css.map
+themes/**/sass/*.css
 
 
 

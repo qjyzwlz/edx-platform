@@ -150,13 +150,14 @@ def enable_theme():
 
     staticfiles_dir = theme_dir / "lms" / "static"
     if staticfiles_dir.isdir():
-        settings.STATICFILES_DIRS.insert(0, staticfiles_dir)
+        # settings.STATICFILES_DIRS.insert(0, staticfiles_dir)
+        settings.STATICFILES_DIRS.append(staticfiles_dir)
 
     locale_dir = theme_dir / "lms" / "conf" / "locale"
     if locale_dir.isdir():
         settings.LOCALE_PATHS.insert(0, locale_dir)
 
-    favicon = theme_dir / "lms" / "images" / "favicon.ico"
+    favicon = theme_dir / "lms" / "static" / "images" / "favicon.ico"
     if favicon.isfile():
         settings.FAVICON_PATH = str(favicon)
 

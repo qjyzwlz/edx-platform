@@ -397,8 +397,6 @@ FEATURES = {
     'ENABLE_TEAMS': False,
 }
 
-THEME_DIR = ENV_ROOT / "themes" / "red-theme"
-
 # Ignore static asset files on import which match this pattern
 ASSET_IGNORE_REGEX = r"(^\._.*$)|(^\.DS_Store$)|(^.*~$)"
 
@@ -420,6 +418,8 @@ ENV_ROOT = REPO_ROOT.dirname()  # virtualenv dir /edx-platform is in
 COURSES_ROOT = ENV_ROOT / "data"
 
 DATA_DIR = COURSES_ROOT
+
+THEME_DIR = REPO_ROOT / "themes" / "red-theme"
 
 # TODO: Remove the rest of the sys.path modification here and in cms/envs/common.py
 sys.path.append(REPO_ROOT)
