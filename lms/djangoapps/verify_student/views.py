@@ -60,6 +60,7 @@ from eventtracking import tracker
 import analytics
 from courseware.url_helpers import get_redirect_url
 from django.contrib.auth.models import User
+from staticfiles.storage import staticfiles_storage
 
 log = logging.getLogger(__name__)
 
@@ -410,6 +411,7 @@ class PayAndVerifyView(View):
             ),
             'already_verified': already_verified,
             'verification_good_until': verification_good_until,
+            'capture_sound': staticfiles_storage.url("audio/camera_capture.wav")
         }
         return render_to_response("verify_student/pay_and_verify.html", context)
 
@@ -1165,7 +1167,8 @@ class InCourseReverifyView(View):
             'course_name': course.display_name_with_default,
             'checkpoint_name': checkpoint_name,
             'platform_name': settings.PLATFORM_NAME,
-            'usage_id': usage_id
+            'usage_id': usage_id,
+            'capture_sound': staticfiles_storage.url("audio/camera_capture.wav")
         }
         return render_to_response("verify_student/incourse_reverify.html", context)
 
@@ -1207,7 +1210,8 @@ class InCourseReverifyView(View):
                 'error': True,
                 'errorMsg': _("No checkpoint found"),
                 'platform_name': settings.PLATFORM_NAME,
-                'usage_id': usage_id
+                'usage_id': usage_id,
+                'capture_sound': staticfiles_storage.url("audio/camera_capture.wav")
             }
             return render_to_response("verify_student/incourse_reverify.html", context)
 
