@@ -7,8 +7,9 @@ from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_GET
 
 from django_future.csrf import ensure_csrf_cookie
-from edxmako.shortcuts import render_to_response
 from opaque_keys.edx.keys import CourseKey
+
+from edxmako.shortcuts import render_to_response
 from openedx.core.djangoapps.credit.api import get_credit_requirements
 from student.auth import has_course_author_access
 from xmodule.modulestore.django import modulestore
