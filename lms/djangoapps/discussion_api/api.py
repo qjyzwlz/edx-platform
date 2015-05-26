@@ -96,7 +96,7 @@ def get_course_topics(course_key, user):
     }
 
 
-def get_thread_list(request, course_key, page, page_size):
+def get_thread_list(request, course_key, page, page_size, topic_id=None):
     """
     Return the list of all discussion threads pertaining to the given course
 
@@ -106,6 +106,7 @@ def get_thread_list(request, course_key, page, page_size):
     course_key: The key of the course to get discussion threads for
     page: The page number (1-indexed) to retrieve
     page_size: The number of threads to retrieve per page
+    topic_id: The id of the topic, if given, to get the discussion threads for
 
     Returns:
 
@@ -124,6 +125,7 @@ def get_thread_list(request, course_key, page, page_size):
         "sort_order": "desc",
         "page": page,
         "per_page": page_size,
+        "commentable_id": topic_id,
     })
     # The comments service returns the last page of results if the requested
     # page is beyond the last page, but we want be consistent with DRF's general
