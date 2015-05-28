@@ -1,8 +1,13 @@
 """
 Discussion API internal interface
 """
+from urllib import urlencode
+from urlparse import urlunparse
+
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
 from django.http import Http404
+
 
 from collections import defaultdict
 
@@ -36,6 +41,15 @@ def _get_course_or_404(course_key, user):
     return course
 
 
+def _get_thread_list_url(course_key, topic_id):
+    path = reverse("thread-list")
+    query_dict = {
+        "course_id": course_key,
+        "topic_id": topic_id
+    }
+    return urlunparse(("", "", path, "", urlencode(query_dict), ""))
+
+
 def get_course_topics(course_key, user):
     """
     Return the course topic listing for the given course and user.
@@ -66,12 +80,12 @@ def get_course_topics(course_key, user):
         {
             "id": None,
             "name": category,
-            "thread_list_url": category.url?,
+            "thread_list_url": _get_thread_list_url(course_key, module.discussion_id),
             "children": [
                 {
                     "id": module.discussion_id,
                     "name": module.discussion_target,
-                    "thread_list_url": module.url?,
+                    "thread_list_url": _get_thread_list_url(course_key, module.discussion_id),
                     "children": [],
                 }
                 for module in sorted(modules_by_category[category], key=get_module_sort_key)
@@ -84,7 +98,7 @@ def get_course_topics(course_key, user):
         {
             "id": entry["id"],
             "name": name,
-            "thread_list_url": ???,
+            "thread_list_url": _get_thread_list_url(course_key, entry["id"]),
             "children": [],
         }
         for name, entry in sorted(
