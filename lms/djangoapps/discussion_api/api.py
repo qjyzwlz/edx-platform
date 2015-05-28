@@ -66,10 +66,12 @@ def get_course_topics(course_key, user):
         {
             "id": None,
             "name": category,
+            "thread_list_url": category.url?,
             "children": [
                 {
                     "id": module.discussion_id,
                     "name": module.discussion_target,
+                    "thread_list_url": module.url?,
                     "children": [],
                 }
                 for module in sorted(modules_by_category[category], key=get_module_sort_key)
@@ -82,6 +84,7 @@ def get_course_topics(course_key, user):
         {
             "id": entry["id"],
             "name": name,
+            "thread_list_url": ???,
             "children": [],
         }
         for name, entry in sorted(
