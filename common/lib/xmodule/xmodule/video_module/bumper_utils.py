@@ -1,6 +1,7 @@
 """
 Utils for video bumper
 """
+import copy
 import json
 import pytz
 import logging
@@ -23,7 +24,13 @@ def get_bumper_settings(video):
     """
     Get bumper settings from video instance.
     """
-    return getattr(video, 'video_bumper', {})
+    bumper_settings = copy.deepcopy(getattr(video, 'video_bumper', {}))
+
+    # clean up /static/ prefix from bumper transcripts
+    for lang, transcript_url in bumper_settings.get('transcripts', {}).items():
+        bumper_settings['transcripts'][lang] = transcript_url.strip().lstrip('/static/')
+
+    return bumper_settings
 
 
 def is_bumper_enabled(video):

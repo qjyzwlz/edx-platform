@@ -154,10 +154,10 @@ class InheritanceMixin(XBlockMixin):
         help=_(
             """Identify a video, 5-10 seconds in length, to play before course videos. Enter the video ID from"""
             """ the Video Uploads page and one or more transcript files in the following format:"""
-            """ {"video_id": "ID", "transcripts": {"language": "filename.srt"}}."""
+            """ {"video_id": "ID", "transcripts": {"language": "/static/filename.srt"}}."""
             """ For example, an entry for a video with two transcripts looks like this:"""
             """ {"video_id": "77cef264-d6f5-4cf2-ad9d-0178ab8c77be","""
-            """ "transcripts": {"en": "DemoX-D01_1.srt", "uk": "DemoX-D01_1_uk.srt"}}"""
+            """ "transcripts": {"en": "/static/DemoX-D01_1.srt", "uk": "/static/DemoX-D01_1_uk.srt"}}"""
         ),
         scope=Scope.settings
     )
