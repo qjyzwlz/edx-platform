@@ -296,6 +296,7 @@ define([
 
     });
 
+
     describe('FilterBarView', function () {
         beforeEach(function () {
             loadFixtures('js/fixtures/discovery.html');
@@ -372,6 +373,7 @@ define([
 
     });
 
+
     describe('SearchFacetView', function () {
         beforeEach(function () {
             loadFixtures('js/fixtures/discovery.html');
@@ -423,12 +425,14 @@ define([
             expect(this.onAddFilter).toHaveBeenCalledWith(
                 {
                     type: $facet.data('facet'),
-                    query: $facetLink.data('value')
+                    query: $facetLink.data('value'),
+                    name: $facetLink.data('text')
                 }
             );
         });
 
     });
+
 
     describe('ResultListView', function () {
 
@@ -523,8 +527,7 @@ define([
             $('.discovery-submit').trigger('click');
             AjaxHelpers.respondWithJson(requests, {});
             expect($('#discovery-message')).not.toBeEmpty();
-            expect($('.courses-listing').toBeEmpty();
-            expect($('.courses-listing .course-title')).toContainHtml('title');
+            expect($('.courses-listing')).toBeEmpty();
         });
 
         it('displays error message', function () {
@@ -534,7 +537,6 @@ define([
             AjaxHelpers.respondWithError(requests, 404);
             expect($('#discovery-message')).not.toBeEmpty();
             expect($('.courses-listing')).toBeEmpty();
-            expect($('.courses-listing .course-title')).toContainHtml('title');
         });
 
         it('check filters and bar removed on clear all', function () {
@@ -561,7 +563,6 @@ define([
         });
 
     });
-
 
 
 });
