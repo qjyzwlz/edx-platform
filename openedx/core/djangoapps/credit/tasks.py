@@ -53,6 +53,7 @@ def _get_min_grade_for_credit(course):
     """
     return getattr(course, "minimum_grade_credit", 0.8)
 
+
 def _get_course_credit_requirements(course):
     """ Returns the list of credit requirements for the given course
 
