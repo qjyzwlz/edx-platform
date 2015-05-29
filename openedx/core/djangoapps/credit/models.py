@@ -13,6 +13,7 @@ from django.db import models
 from jsonfield.fields import JSONField
 from model_utils.models import TimeStampedModel
 from xmodule_django.models import CourseKeyField
+from django.utils.translation import ugettext_lazy
 
 
 log = logging.getLogger(__name__)
@@ -64,7 +65,9 @@ class CreditProvider(TimeStampedModel):
     provider_id = models.CharField(max_length=255, db_index=True, unique=True)
     display_name = models.CharField(max_length=255)
     provider_url = models.URLField(max_length=255, unique=True)
-    eligibility_duration = models.IntegerField()
+    eligibility_duration = models.PositiveIntegerField(
+        help_text=ugettext_lazy(u"Number of seconds to show eligibility message")
+    )
     active = models.BooleanField(default=True)
 
 
