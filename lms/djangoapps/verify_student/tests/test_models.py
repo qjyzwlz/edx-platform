@@ -6,7 +6,6 @@ import requests.exceptions
 import pytz
 
 from django.conf import settings
-from django.test import TestCase
 from django.db.utils import IntegrityError
 from mock import patch
 from nose.tools import assert_is_none, assert_equals, assert_raises, assert_true, assert_false  # pylint: disable=E0611
@@ -486,62 +485,86 @@ class TestPhotoVerification(ModuleStoreTestCase):
 class VerificationCheckpointTest(ModuleStoreTestCase):
     """Tests for the VerificationCheckpoint model. """
 
-    MIDTERM = "midterm"
-    FINAL = "final"
-
     def setUp(self):
         super(VerificationCheckpointTest, self).setUp()
         self.user = UserFactory.create()
         self.course = CourseFactory.create()
+        self.checkpoint_midterm = u'i4x://{org}/{course}/edx-reverification-block/midterm_uuid'.format(
+            org=self.course.id.org, course=self.course.id.course
+        )
+        self.checkpoint_final = u'i4x://{org}/{course}/edx-reverification-block/final_uuid'.format(
+            org=self.course.id.org, course=self.course.id.course
+        )
 
-    @ddt.data(MIDTERM, FINAL)
-    def test_get_verification_checkpoint(self, check_point):
-        """testing class method of VerificationCheckpoint. create the object and then uses the class method to get the
-        verification check point.
+    @ddt.data("midterm", 'final')
+    def test_get_verification_checkpoint(self, checkpoint):
         """
-        # create the VerificationCheckpoint checkpoint
-        ver_check_point = VerificationCheckpoint.objects.create(course_id=self.course.id, checkpoint_name=check_point)
+        Test that reverification check point is created properly.
+        """
+        checkpoint_location = u'i4x://{org}/{course}/edx-reverification-block/{checkpoint}'.format(
+            org=self.course.id.org, course=self.course.id.course, checkpoint=checkpoint
+        )
+        # create the 'VerificationCheckpoint' checkpoint
+        verification_checkpoint = VerificationCheckpoint.objects.create(
+            course_id=self.course.id,
+            checkpoint_location=checkpoint_location
+        )
         self.assertEqual(
-            VerificationCheckpoint.get_verification_checkpoint(self.course.id, check_point),
-            ver_check_point
+            VerificationCheckpoint.get_verification_checkpoint(self.course.id, checkpoint_location),
+            verification_checkpoint
         )
 
     def test_get_verification_checkpoint_for_not_existing_values(self):
-        """testing class method of VerificationCheckpoint. create the object and then uses the class method to get the
-        verification check point.
+        """
+        Test that 'get_verification_checkpoint' method returns None if user
+        tries to access checkpoint with an invalid location.
         """
         # create the VerificationCheckpoint checkpoint
-        VerificationCheckpoint.objects.create(course_id=self.course.id, checkpoint_name=self.MIDTERM)
+        VerificationCheckpoint.objects.create(course_id=self.course.id, checkpoint_location=self.checkpoint_midterm)
 
-        # get verification for not existing checkpoint
-        self.assertEqual(VerificationCheckpoint.get_verification_checkpoint(self.course.id, 'abc'), None)
+        # get verification for a non existing checkpoint
+        self.assertEqual(
+            VerificationCheckpoint.get_verification_checkpoint(
+                self.course.id,
+                u'i4x://edX/DemoX/edx-reverification-block/invalid_location'
+            ),
+            None
+        )
 
     def test_unique_together_constraint(self):
-        """testing the unique together contraint.
+        """
+        Test the unique together constraint.
         """
         # create the VerificationCheckpoint checkpoint
-        VerificationCheckpoint.objects.create(course_id=self.course.id, checkpoint_name=self.MIDTERM)
+        VerificationCheckpoint.objects.create(course_id=self.course.id, checkpoint_location=self.checkpoint_midterm)
 
-        # create the VerificationCheckpoint checkpoint with same course id and checkpoint name
+        # test creating the VerificationCheckpoint checkpoint with same course
+        # id and checkpoint name
         with self.assertRaises(IntegrityError):
-            VerificationCheckpoint.objects.create(course_id=self.course.id, checkpoint_name=self.MIDTERM)
+            VerificationCheckpoint.objects.create(course_id=self.course.id, checkpoint_location=self.checkpoint_midterm)
 
     def test_add_verification_attempt_software_secure(self):
-        """testing manytomany relationship. adding softwaresecure attempt to the verification checkpoints.
+        """
+        Test adding software secure photo verifications attempts for
+        reverification checkpoints.
         """
         # adding two check points.
-        check_point1 = VerificationCheckpoint.objects.create(course_id=self.course.id, checkpoint_name=self.MIDTERM)
-        check_point2 = VerificationCheckpoint.objects.create(course_id=self.course.id, checkpoint_name=self.FINAL)
+        check_point1 = VerificationCheckpoint.objects.create(
+            course_id=self.course.id, checkpoint_location=self.checkpoint_midterm
+        )
+        check_point2 = VerificationCheckpoint.objects.create(
+            course_id=self.course.id, checkpoint_location=self.checkpoint_final
+        )
 
-        # Make an attempt and added to the checkpoint1.
+        # make an attempt for the checkpoint1.
         check_point1.add_verification_attempt(SoftwareSecurePhotoVerification.objects.create(user=self.user))
         self.assertEqual(check_point1.photo_verification.count(), 1)
 
-        # Make an other attempt and added to the checkpoint1.
+        # make another attempt for the checkpoint1.
         check_point1.add_verification_attempt(SoftwareSecurePhotoVerification.objects.create(user=self.user))
         self.assertEqual(check_point1.photo_verification.count(), 2)
 
-        # make new attempt and adding to the checkpoint2
+        # make new attempt for the checkpoint2
         attempt = SoftwareSecurePhotoVerification.objects.create(user=self.user)
         check_point2.add_verification_attempt(attempt)
         self.assertEqual(check_point2.photo_verification.count(), 1)
@@ -559,15 +582,21 @@ class VerificationStatusTest(ModuleStoreTestCase):
         super(VerificationStatusTest, self).setUp()
         self.user = UserFactory.create()
         self.course = CourseFactory.create()
-        self.check_point1 = VerificationCheckpoint.objects.create(course_id=self.course.id, checkpoint_name="midterm")
-        self.check_point2 = VerificationCheckpoint.objects.create(course_id=self.course.id, checkpoint_name="final")
-        self.dummy_reverification_item_id_1 = 'i4x://{}/{}/edx-reverification-block/related_assessment_1'.format(
-            self.course.location.org,
-            self.course.location.course
+
+        self.check_point1_location = u'i4x://{org}/{course}/edx-reverification-block/checkpoint1_uuid'.format(
+            org=self.course.id.org, course=self.course.id.course
         )
-        self.dummy_reverification_item_id_2 = 'i4x://{}/{}/edx-reverification-block/related_assessment_2'.format(
-            self.course.location.org,
-            self.course.location.course
+        self.check_point1 = VerificationCheckpoint.objects.create(
+            course_id=self.course.id,
+            checkpoint_location=self.check_point1_location
+        )
+
+        self.check_point2_location = u'i4x://{org}/{course}/edx-reverification-block/checkpoint2_uuid'.format(
+            org=self.course.id.org, course=self.course.id.course
+        )
+        self.check_point2 = VerificationCheckpoint.objects.create(
+            course_id=self.course.id,
+            checkpoint_location=self.check_point2_location
         )
 
     @ddt.data('submitted', "approved", "denied", "error")
@@ -578,32 +607,32 @@ class VerificationStatusTest(ModuleStoreTestCase):
         VerificationStatus.add_verification_status(
             checkpoint=self.check_point1,
             user=self.user,
-            status=status,
-            location_id=self.dummy_reverification_item_id_1
+            status=status
         )
 
-        # getting the status from db
+        # test the status from database
         result = VerificationStatus.objects.filter(checkpoint=self.check_point1)[0]
         self.assertEqual(result.status, status)
         self.assertEqual(result.user, self.user)
 
     @ddt.data("approved", "denied", "error")
     def test_add_status_from_checkpoints(self, status):
-        """ Adding verification status for checkpoints list after submitting sspv. """
+        """
+        Test verification status for reverification checkpoints after
+        submitting software secure photo verification.
+        """
 
         # add initial verification status for checkpoints
         initial_status = "submitted"
         VerificationStatus.add_verification_status(
             checkpoint=self.check_point1,
             user=self.user,
-            status=initial_status,
-            location_id=self.dummy_reverification_item_id_1
+            status=initial_status
         )
         VerificationStatus.add_verification_status(
             checkpoint=self.check_point2,
             user=self.user,
-            status=initial_status,
-            location_id=self.dummy_reverification_item_id_2
+            status=initial_status
         )
 
         # now add verification status for multiple checkpoint points
@@ -612,18 +641,19 @@ class VerificationStatusTest(ModuleStoreTestCase):
         )
 
         # test that verification status entries with new status have been added
-        # for both checkpoints and all entries have related 'location_id'.
+        # for both checkpoints
         result = VerificationStatus.objects.filter(user=self.user, checkpoint=self.check_point1)
         self.assertEqual(len(result), len(self.check_point1.checkpoint_status.all()))
         self.assertEqual(
-            list(result.values_list('location_id', flat=True)),
-            list(self.check_point1.checkpoint_status.all().values_list('location_id', flat=True))
+            list(result.values_list('checkpoint__checkpoint_location', flat=True)),
+            list(self.check_point1.checkpoint_status.all().values_list('checkpoint__checkpoint_location', flat=True))
         )
+
         result = VerificationStatus.objects.filter(user=self.user, checkpoint=self.check_point2)
         self.assertEqual(len(result), len(self.check_point2.checkpoint_status.all()))
         self.assertEqual(
-            list(result.values_list('location_id', flat=True)),
-            list(self.check_point2.checkpoint_status.all().values_list('location_id', flat=True))
+            list(result.values_list('checkpoint__checkpoint_location', flat=True)),
+            list(self.check_point2.checkpoint_status.all().values_list('checkpoint__checkpoint_location', flat=True))
         )
 
     def test_get_location_id(self):
@@ -637,28 +667,28 @@ class VerificationStatusTest(ModuleStoreTestCase):
             checkpoint=self.check_point1,
             user=self.user,
             status='submitted',
-            location_id=self.dummy_reverification_item_id_1
         )
-
         attempt = SoftwareSecurePhotoVerification.objects.filter(user=self.user)
 
         self.assertIsNotNone(VerificationStatus.get_location_id(attempt))
         self.assertEqual(VerificationStatus.get_location_id(None), '')
 
     def test_get_user_attempts(self):
-
-        # adding verification status
+        """Test adding verification status."""
         VerificationStatus.add_verification_status(
             checkpoint=self.check_point1,
             user=self.user,
-            status='submitted',
-            location_id=self.dummy_reverification_item_id_1
+            status='submitted'
         )
 
-        self.assertEqual(VerificationStatus.get_user_attempts(
-            course_key=self.course.id,
-            user_id=self.user.id,
-            related_assessment='midterm', location_id=self.dummy_reverification_item_id_1), 1)
+        self.assertEqual(
+            VerificationStatus.get_user_attempts(
+                user_id=self.user.id,
+                course_key=self.course.id,
+                related_assessment_location=self.check_point1_location
+            ),
+            1
+        )
 
 
 class SkippedReverificationTest(ModuleStoreTestCase):
@@ -668,57 +698,60 @@ class SkippedReverificationTest(ModuleStoreTestCase):
         super(SkippedReverificationTest, self).setUp()
         self.user = UserFactory.create()
         self.course = CourseFactory.create()
-        self.checkpoint = VerificationCheckpoint.objects.create(course_id=self.course.id, checkpoint_name="midterm")
+        dummy_checkpoint_location = u'i4x://edX/DemoX/edx-reverification-block/midterm_uuid'
+        self.checkpoint = VerificationCheckpoint.objects.create(
+            course_id=self.course.id,
+            checkpoint_location=dummy_checkpoint_location
+        )
 
     def test_add_skipped_attempts(self):
-        """adding skipped re-verification object using class method."""
+        """Test 'add_skipped_reverification_attempt' method."""
 
-        # adding verification status
+        # add verification status
         SkippedReverification.add_skipped_reverification_attempt(
             checkpoint=self.checkpoint, user_id=self.user.id, course_id=unicode(self.course.id)
         )
 
-        # getting the status from db
+        # test the status of skipped reverification from database
         result = SkippedReverification.objects.filter(course_id=self.course.id)[0]
         self.assertEqual(result.checkpoint, self.checkpoint)
         self.assertEqual(result.user, self.user)
         self.assertEqual(result.course_id, self.course.id)
 
     def test_unique_constraint(self):
-        """adding skipped re-verification with same user and course id will
-        raise integrity exception
         """
-
-        # adding verification object
+        Test that adding skipped re-verification with same user and course id
+        will raise 'IntegrityError' exception.
+        """
+        # add verification object
         SkippedReverification.add_skipped_reverification_attempt(
             checkpoint=self.checkpoint, user_id=self.user.id, course_id=unicode(self.course.id)
         )
-
         with self.assertRaises(IntegrityError):
             SkippedReverification.add_skipped_reverification_attempt(
                 checkpoint=self.checkpoint, user_id=self.user.id, course_id=unicode(self.course.id)
             )
 
-        # Create skipped attempt for different user
+        # create skipped attempt for different user
         user2 = UserFactory.create()
         SkippedReverification.add_skipped_reverification_attempt(
             checkpoint=self.checkpoint, user_id=user2.id, course_id=unicode(self.course.id)
         )
 
-        # getting the status from db
+        # test the status of skipped reverification from database
         result = SkippedReverification.objects.filter(user=user2)[0]
         self.assertEqual(result.checkpoint, self.checkpoint)
         self.assertEqual(result.user, user2)
         self.assertEqual(result.course_id, self.course.id)
 
     def test_check_user_skipped_reverification_exists(self):
-        """Checking check_user_skipped_reverification_exists method returns boolean status"""
-
-        # adding verification status
+        """
+        Test the 'check_user_skipped_reverification_exists' method's response.
+        """
+        # add verification status
         SkippedReverification.add_skipped_reverification_attempt(
             checkpoint=self.checkpoint, user_id=self.user.id, course_id=unicode(self.course.id)
         )
-
         self.assertTrue(
             SkippedReverification.check_user_skipped_reverification_exists(course_id=self.course.id, user=self.user)
         )

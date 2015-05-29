@@ -855,12 +855,14 @@ class SoftwareSecurePhotoVerification(PhotoVerification):
 
     @classmethod
     def submit_faceimage(cls, user, face_image, photo_id_key):
-        """Submit the faceimage to SoftwareSecurePhotoVerification
+        """
+        Submit the face image to SoftwareSecurePhotoVerification.
 
         Arguments:
             user(User): user object
             face_image (bytestream): raw bytestream image data
             photo_id_key (str) : SoftwareSecurePhotoVerification attribute
+
         Returns:
             SoftwareSecurePhotoVerification Object
         """
@@ -892,7 +894,8 @@ class SoftwareSecurePhotoVerification(PhotoVerification):
 class VerificationCheckpoint(models.Model):
     """
     Represents a point at which a user is asked to re-verify his/her identity.
-    Each checkpoint is uniquely identified by a (course_id, checkpoint_location) tuple.
+    Each checkpoint is uniquely identified by a
+    (course_id, checkpoint_location) tuple.
     """
     course_id = CourseKeyField(max_length=255, db_index=True)
     checkpoint_location = models.CharField(max_length=255, null=True, blank=True)
@@ -902,7 +905,9 @@ class VerificationCheckpoint(models.Model):
         unique_together = (('course_id', 'checkpoint_location'),)
 
     def __unicode__(self):
-        """Unicode representation of the checkpoint. """
+        """
+        Unicode representation of the checkpoint.
+        """
         return u"{checkpoint} in {course}".format(
             checkpoint=self.checkpoint_name,
             course=self.course_id
@@ -910,20 +915,23 @@ class VerificationCheckpoint(models.Model):
 
     @lazy
     def checkpoint_name(self):
-        """Lazy method for getting checkpoint name of reverification block."""
+        """
+        Lazy method for getting checkpoint name of reverification block.
+        """
         checkpoint_key = UsageKey.from_string(self.checkpoint_location)
         return modulestore().get_item(checkpoint_key).related_assessment
 
     def add_verification_attempt(self, verification_attempt):
-        """ Add the verification attempt in M2M relation of photo_verification
+        """
+        Add the verification attempt in M2M relation of photo_verification
 
         Arguments:
-            verification_attempt(SoftwareSecurePhotoVerification): SoftwareSecurePhotoVerification object
+            verification_attempt(object): SoftwareSecurePhotoVerification object
 
         Returns:
             None
         """
-        self.photo_verification.add(verification_attempt)
+        self.photo_verification.add(verification_attempt)   # pylint: disable=no-member
 
     def get_user_latest_status(self, user_id):
         """ Return the latest status of the given checkpoint attempt by user
@@ -935,17 +943,18 @@ class VerificationCheckpoint(models.Model):
             VerificationStatus object if found any else None
         """
         try:
-            return self.checkpoint_status.filter(user_id=user_id).latest()
+            return self.checkpoint_status.filter(user_id=user_id).latest()  # pylint: disable=no-member
         except ObjectDoesNotExist:
             return None
 
     @classmethod
     def get_verification_checkpoint(cls, course_id, checkpoint_location):
-        """Get the verification checkpoint for given course_id and checkpoint name
+        """
+        Get the verification checkpoint for given course_id and checkpoint name
 
         Arguments:
             course_id(CourseKey): CourseKey
-            checkpoint_name(str): checkpoint name
+            checkpoint_location(str): Verification checkpoint location
 
         Returns:
             VerificationCheckpoint object if exists otherwise None
@@ -989,7 +998,7 @@ class VerificationStatus(models.Model):
         Arguments:
             checkpoint(VerificationCheckpoint): VerificationCheckpoint object
             user(User): user object
-            status(str): String representing the status from VERIFICATION_STATUS_CHOICES
+            status(str): Status from VERIFICATION_STATUS_CHOICES
 
         Returns:
             None
@@ -1003,7 +1012,7 @@ class VerificationStatus(models.Model):
         Arguments:
             checkpoints(list): list of VerificationCheckpoint objects
             user(User): user object
-            status(str): String representing the status from VERIFICATION_STATUS_CHOICES
+            status(str): Atatus from VERIFICATION_STATUS_CHOICES
 
         Returns:
             None
@@ -1020,10 +1029,10 @@ class VerificationStatus(models.Model):
         Arguments:
             user_id(str): User Id string
             course_key(str): A CourseKey of a course
-            related_assessment_location(str): Verification checkpoint name
+            related_assessment_location(str): Verification checkpoint location
 
         Returns:
-            count of re-verification attempts
+            Count of re-verification attempts
         """
 
         return cls.objects.filter(
@@ -1035,10 +1044,11 @@ class VerificationStatus(models.Model):
 
     @classmethod
     def get_location_id(cls, photo_verification):
-        """ Return the location id of xblock
+        """
+        Get the location ID of reverification XBlock
 
         Args:
-            photo_verification(SoftwareSecurePhotoVerification): SoftwareSecurePhotoVerification object
+            photo_verification(object): SoftwareSecurePhotoVerification object
 
         Return:
             Location Id of XBlock if any else empty string
@@ -1051,7 +1061,8 @@ class VerificationStatus(models.Model):
 
 
 class InCourseReverificationConfiguration(ConfigurationModel):
-    """Configure in-course re-verification.
+    """
+    Configure in-course re-verification.
 
     Enable or disable in-course re-verification feature.
     When this flag is disabled, the "in-course re-verification" feature
@@ -1059,7 +1070,6 @@ class InCourseReverificationConfiguration(ConfigurationModel):
 
     When the flag is enabled, the "in-course re-verification" feature
     will be enabled.
-
     """
     pass
 
@@ -1081,12 +1091,14 @@ class SkippedReverification(models.Model):
 
     @classmethod
     def add_skipped_reverification_attempt(cls, checkpoint, user_id, course_id):
-        """ Create skipped reverification object
+        """
+        Create skipped reverification object.
 
         Arguments:
             checkpoint(VerificationCheckpoint): VerificationCheckpoint object
             user_id(str): User Id of currently logged in user
             course_id(CourseKey): CourseKey
+
         Returns:
             None
         """
@@ -1094,11 +1106,14 @@ class SkippedReverification(models.Model):
 
     @classmethod
     def check_user_skipped_reverification_exists(cls, user, course_id):
-        """Check user skipped re-verification attempt exists against specific course
+        """
+        Check existence of a user's skipped re-verification attempt for a
+        specific course.
 
         Arguments:
             user(User): user object
             course_id(CourseKey): CourseKey
+
         Returns:
             Boolean
         """
