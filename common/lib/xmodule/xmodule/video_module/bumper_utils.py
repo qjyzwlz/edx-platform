@@ -28,7 +28,7 @@ def get_bumper_settings(video):
 
     # clean up /static/ prefix from bumper transcripts
     for lang, transcript_url in bumper_settings.get('transcripts', {}).items():
-        bumper_settings['transcripts'][lang] = transcript_url.strip().lstrip('/static/')
+        bumper_settings['transcripts'][lang] = transcript_url.replace("/static/", "")
 
     return bumper_settings
 
