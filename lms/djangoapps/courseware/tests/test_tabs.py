@@ -25,6 +25,7 @@ from xmodule.modulestore.tests.django_utils import (
 )
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory, ItemFactory
+from nose.plugins.attrib import attr
 
 
 class TabTestCase(ModuleStoreTestCase):
