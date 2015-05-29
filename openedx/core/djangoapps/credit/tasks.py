@@ -13,7 +13,6 @@ from openedx.core.djangoapps.credit.models import CreditCourse
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.exceptions import ItemNotFoundError
 
-
 LOGGER = get_task_logger(__name__)
 
 
@@ -35,7 +34,7 @@ def update_course_requirements(course_id):
             course = modulestore().get_course(course_key)
             requirements = _get_course_credit_requirements(course)
             set_credit_requirements(course_key, requirements)
-    except (InvalidKeyError, ItemNotFoundError, InvalidCreditRequirements, AttributeError) as exc:
+    except (InvalidKeyError, ItemNotFoundError, InvalidCreditRequirements) as exc:
         LOGGER.error('Error on adding the requirements for course %s - %s', course_id, unicode(exc))
         raise update_course_requirements.retry(args=[course_id], exc=exc)
     else:
@@ -46,7 +45,7 @@ def _get_course_credit_requirements(course):
     """ Returns the list of credit requirements for the given course
 
     It returns the minimum_grade_credit and also the ICRV checkpoints
-    if added any in the course
+    if any were added in the course
 
     Args:
         course(Course): The course object
@@ -56,8 +55,8 @@ def _get_course_credit_requirements(course):
     """
     icrv_requirements = _get_credit_course_requirement_xblocks(course)
     min_grade_requirement = _get_min_grade_requirement(course)
-    icrv_requirements.extend(min_grade_requirement)
-    return icrv_requirements
+    credit_requirements = icrv_requirements + min_grade_requirement
+    return credit_requirements
 
 
 def _get_min_grade_requirement(course):
@@ -72,15 +71,23 @@ def _get_min_grade_requirement(course):
     Returns:
         The list of minimum_grade_credit requirements
     """
-    requirement = [
-        {
-            "namespace": "grade",
-            "name": "grade",
-            "criteria": {
-                "min_grade": getattr(course, "minimum_grade_credit")
+    requirement = []
+    try:
+        requirement = [
+            {
+                "namespace": "grade",
+                "name": "grade",
+                "criteria": {
+                    "min_grade": getattr(course, "minimum_grade_credit")
+                }
             }
-        }
-    ]
+        ]
+    except AttributeError as exp:
+        LOGGER.error(
+            "The course {course_id} does not has minimum_grade_credit attribute".format(
+                course_id=unicode(course.id)
+            )
+        )
     return requirement
 
 
@@ -121,6 +128,24 @@ def _is_credit_requirement(xblock):
     Returns:
         True if xblock is a credit requirement else False
     """
+
+    is_credit_requirement = False
+
     if callable(getattr(xblock, "is_course_credit_requirement", None)):
-        return xblock.is_course_credit_requirement()
-    return False
+        is_credit_requirement = xblock.is_course_credit_requirement()
+        if is_credit_requirement:
+            if not callable(getattr(xblock, "get_credit_requirement_namespace", None)):
+                is_credit_requirement = False
+                LOGGER.error(
+                    "The has_namespace_function is not defined on xblock {xblock}".format(
+                        xblock=xblock
+                    )
+                )
+            if not callable(getattr(xblock, "get_credit_requirement_name", None)):
+                is_credit_requirement = False
+                LOGGER.error(
+                    "The has_name_function is not defined on xblock {xblock}".format(
+                        xblock=xblock
+                    )
+                )
+    return is_credit_requirement
