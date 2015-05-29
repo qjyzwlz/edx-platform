@@ -35,23 +35,11 @@ def update_course_requirements(course_id):
             course = modulestore().get_course(course_key)
             requirements = _get_course_credit_requirements(course)
             set_credit_requirements(course_key, requirements)
-    except (InvalidKeyError, ItemNotFoundError, InvalidCreditRequirements) as exc:
+    except (InvalidKeyError, ItemNotFoundError, InvalidCreditRequirements, AttributeError) as exc:
         LOGGER.error('Error on adding the requirements for course %s - %s', course_id, unicode(exc))
         raise update_course_requirements.retry(args=[course_id], exc=exc)
     else:
         LOGGER.info('Requirements added for course %s', course_id)
-
-
-def _get_min_grade_for_credit(course):
-    """ Returns the min_grade for the credit requirements
-
-     Args:
-        course(Course): The course object
-
-    Returns:
-        Float value of minimum_grade_credit attribute of course
-    """
-    return getattr(course, "minimum_grade_credit", 0.8)
 
 
 def _get_course_credit_requirements(course):
@@ -66,7 +54,7 @@ def _get_course_credit_requirements(course):
     Returns:
         List of minimum_grade_credit and ICRV requirements
     """
-    icrv_requirements = _get_credit_course_requirements_xblocks(course)
+    icrv_requirements = _get_credit_course_requirement_xblocks(course)
     min_grade_requirement = _get_min_grade_requirement(course)
     icrv_requirements.extend(min_grade_requirement)
     return icrv_requirements
@@ -78,6 +66,9 @@ def _get_min_grade_requirement(course):
     Args:
         course(Course): The course object
 
+    Raises:
+        AttributeError if the course has not minimum_grade_credit attribute
+
     Returns:
         The list of minimum_grade_credit requirements
     """
@@ -86,14 +77,14 @@ def _get_min_grade_requirement(course):
             "namespace": "grade",
             "name": "grade",
             "criteria": {
-                "min_grade": _get_min_grade_for_credit(course)
+                "min_grade": getattr(course, "minimum_grade_credit")
             }
         }
     ]
     return requirement
 
 
-def _get_credit_course_requirements_xblocks(course):  # pylint: disable=invalid-name
+def _get_credit_course_requirement_xblocks(course):  # pylint: disable=invalid-name
     """ Generates a course structure dictionary for the specified course.
 
     Args:
