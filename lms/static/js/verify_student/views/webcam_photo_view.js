@@ -259,7 +259,7 @@
             $resetBtn.on( 'click', _.bind( this.reset, this ) );
             $captureBtn.on( 'click', _.bind( this.capture, this ) );
 
-            $resetBtn.on( 'keyup', _.bind( this.reset_by_enter, this ) );
+            $resetBtn.on( 'keyup', _.bind( this.resetByEnter, this ) );
 
             // Show the capture button
             $captureBtn.removeClass('is-hidden');
@@ -286,7 +286,7 @@
         },
 
 
-        reset_by_enter: function(event){
+        resetByEnter: function(event){
             if(event.keyCode == key.enter){
                 this.reset();
             }
