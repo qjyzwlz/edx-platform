@@ -56,8 +56,6 @@ $light-border: 1px solid $gray-l5;
 }
 
 .confirm-enrollment {
-  @include direction();
-
   .title {
     @include text-align(left);
     @extend %t-title4;
