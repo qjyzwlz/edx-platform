@@ -54,7 +54,7 @@ class CourseTopicsView(_ViewMixin, DeveloperErrorViewMixin, APIView):
     def get(self, request, course_id):
         """Implements the GET method as described in the class docstring."""
         course_key = CourseLocator.from_string(course_id)
-        return Response(get_course_topics(course_key, request.user))
+        return Response(get_course_topics(request, course_key))
 
 
 class ThreadViewSet(_ViewMixin, DeveloperErrorViewMixin, ViewSet):
