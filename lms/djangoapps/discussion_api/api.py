@@ -41,7 +41,7 @@ def _get_course_or_404(course_key, user):
     return course
 
 
-def _get_thread_list_url(request, course_key, topic_id_list):
+def get_thread_list_url(request, course_key, topic_id_list):
     """
     Returns the URL for the thread_list_url field, given a list of topic_ids
     """
@@ -82,7 +82,7 @@ def get_course_topics(request, course_key):
         {
             "id": None,
             "name": category,
-            "thread_list_url": _get_thread_list_url(
+            "thread_list_url": get_thread_list_url(
                 request,
                 course_key,
                 [item.discussion_id for item in modules_by_category[category]]
@@ -91,7 +91,7 @@ def get_course_topics(request, course_key):
                 {
                     "id": module.discussion_id,
                     "name": module.discussion_target,
-                    "thread_list_url": _get_thread_list_url(request, course_key, [module.discussion_id]),
+                    "thread_list_url": get_thread_list_url(request, course_key, [module.discussion_id]),
                     "children": [],
                 }
                 for module in sorted(modules_by_category[category], key=get_module_sort_key)
@@ -104,7 +104,7 @@ def get_course_topics(request, course_key):
         {
             "id": entry["id"],
             "name": name,
-            "thread_list_url": _get_thread_list_url(request, course_key, [entry["id"]]),
+            "thread_list_url": get_thread_list_url(request, course_key, [entry["id"]]),
             "children": [],
         }
         for name, entry in sorted(

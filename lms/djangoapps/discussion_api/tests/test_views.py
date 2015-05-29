@@ -85,7 +85,8 @@ class CourseTopicsViewTest(DiscussionAPIViewTestMixin, ModuleStoreTestCase):
                     "id": "test_topic",
                     "name": "Test Topic",
                     "children": [],
-                    "thread_list_url": "http://testserver/api/discussion/v1/threads/?course_id=x%2Fy%2Fz&topic_id=test_topic"
+                    "thread_list_url":
+                        "http://testserver/api/discussion/v1/threads/?course_id=x%2Fy%2Fz&topic_id=test_topic"
                 }],
             }
         )

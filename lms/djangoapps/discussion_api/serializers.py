@@ -151,7 +151,7 @@ class ThreadSerializer(_ContentSerializer):
     endorsed_comment_list_url = serializers.SerializerMethodField("get_endorsed_comment_list_url")
     non_endorsed_comment_list_url = serializers.SerializerMethodField("get_non_endorsed_comment_list_url")
 
-    def __init__(self, *args, **kwargs):
+    def  __init__(self, *args, **kwargs):
         super(ThreadSerializer, self).__init__(*args, **kwargs)
         # type is an invalid class attribute name, so we must declare a
         # different name above and modify it here
